@@ -54,12 +54,8 @@ namespace ClosedXML.Utils
 
         public static string GetSalt(int length = 32)
         {
-            using (var random = new RNGCryptoServiceProvider())
-            {
-                var salt = new byte[length];
-                random.GetNonZeroBytes(salt);
-                return Convert.ToBase64String(salt);
-            }
+            var salt = RandomNumberGenerator.GetBytes(length);
+            return Convert.ToBase64String(salt);
         }
 
         public static Boolean RequiresSalt(Algorithm algorithm)
@@ -105,7 +101,7 @@ namespace ClosedXML.Utils
             return Convert.ToString(hash, 16).ToUpperInvariant();
         }
 
-        private static String GetSha512PasswordHash(String password, String salt, UInt32 spinCount)
+        private static string GetSha512PasswordHash(String password, String salt, UInt32 spinCount)
         {
             if (password == null)
                 throw new ArgumentNullException(nameof(password));
@@ -117,19 +113,15 @@ namespace ClosedXML.Utils
             var passwordBytes = Encoding.Unicode.GetBytes(password);
             var bytes = saltBytes.Concat(passwordBytes).ToArray();
 
-            byte[] hashedBytes;
-            using (var hash = new SHA512Managed())
-            {
-                hashedBytes = hash.ComputeHash(bytes);
+            var hashedBytes = SHA512.HashData(bytes);
 
-                bytes = new byte[hashedBytes.Length + sizeof(uint)];
-                for (uint i = 0; i < spinCount; i++)
-                {
-                    var le = BitConverter.GetBytes(i);
-                    Array.Copy(hashedBytes, bytes, hashedBytes.Length);
-                    Array.Copy(le, 0, bytes, hashedBytes.Length, le.Length);
-                    hashedBytes = hash.ComputeHash(bytes);
-                }
+            bytes = new byte[hashedBytes.Length + sizeof(uint)];
+            for (uint i = 0; i < spinCount; i++)
+            {
+                var le = BitConverter.GetBytes(i);
+                Array.Copy(hashedBytes, bytes, hashedBytes.Length);
+                Array.Copy(le, 0, bytes, hashedBytes.Length, le.Length);
+                hashedBytes = SHA512.HashData(bytes);
             }
 
             return Convert.ToBase64String(hashedBytes);

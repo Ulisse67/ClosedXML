@@ -44,7 +44,7 @@ namespace ClosedXML.Utils
 
         private static int ReadHex(string text, int start, int length)
         {
-            return Int32.Parse(text.Substring(start, length), NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+            return int.Parse(text.AsSpan(start, length), NumberStyles.HexNumber, CultureInfo.InvariantCulture);
         }
     }
 }
